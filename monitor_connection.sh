@@ -24,7 +24,7 @@ flock -n 9 || exit 0
 GATEWAY="$(ip route show default 2>/dev/null | awk '{for (i = 1; i < NF; i++) if ($i == "via") {print $(i+1); exit}}')"
 TARGETS=("${GATEWAY:-unknown}|gateway" "1.1.1.1|cloudflare" "8.8.8.8|google")
 
-TIMESTAMP="$(date +'%Y-%m-%dT%H:%M:%S%:z')"
+TIMESTAMP="$(date +'%Y-%m-%dT%H:%M:%S%z')"
 
 if [ ! -s "$LOG_FILE" ]; then
     printf 'timestamp,host,label,sent,received,loss_pct,min_ms,avg_ms,max_ms\n' >>"$LOG_FILE"
@@ -40,7 +40,7 @@ for target in "${TARGETS[@]}"; do
     loss="$(awk '/packet loss/ {for (i = 1; i <= NF; i++) if ($i ~ /%$/) {gsub(/%/, "", $i); print $i; exit}}' <<<"$out")"
 
     min="" ; avg="" ; max=""
-    rtt="$(awk '/^rtt/ {print $4; exit}' <<<"$out")"
+    rtt="$(awk '/round-trip/ {print $4; exit}' <<<"$out")"
     if [ -n "$rtt" ]; then
         IFS='/' read -r min avg max _ <<<"$rtt"
     fi
